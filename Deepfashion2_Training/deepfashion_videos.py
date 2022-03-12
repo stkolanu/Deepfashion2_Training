@@ -1,11 +1,11 @@
 import cv2
 import os
 import sys
-from mrcnn import utils
-from mrcnn import model as modellib
-from mrcnn.config import Config
-import mrcnn.model as modellib
-from mrcnn.model import MaskRCNN
+from lib import utils
+from lib import model as modellib
+from lib.config import Config
+import lib.model as modellib
+from lib.model import MaskRCNN
 import uuid
 import argparse
 import skimage
@@ -31,7 +31,7 @@ config = TestConfig()
 
 
 model = modellib.MaskRCNN(mode="inference", config=config, model_dir='/content/drive/My Drive/')
-model.load_weights('/content/drive/My Drive/mask_rcnn_deepfashion2_0100.h5', by_name=True)
+model.load_weights('/content/gdrive/MyDrive/MaxTap/mask_rcnn_deepfashion2_0100.h5', by_name=True)
 
 class_names = ['short_sleeved_shirt', 'long_sleeved_shirt', 'short_sleeved_outwear', 'long_sleeved_outwear', 'vest', 'sling', 
                'shorts', 'trousers', 'skirt', 'short_sleeved_dress', 'long_sleeved_dress',
@@ -93,15 +93,19 @@ frame_height = int(stream.get(4))
 
 size = (frame_width, frame_height) 
 out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc(*'MJPG'), 10, size)
-while True:
-	ret , frame = stream.read()
-	if ret == True:
-		results = model.detect([frame], verbose=0)
-		r = results[0]
-		masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
-		out.write(masked_image)
-		if(cv2.waitKey(1) & 0xFF == ord('q')):
-			break
+i=0
+
+while (stream.isOpened()):
+    ret , frame = stream.read()
+    print("Frame",i)
+    i+=1
+    if ret == True:
+		    results = model.detect([frame], verbose=0)
+		    r = results[0]
+		    masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
+		    out.write(masked_image)
+    if(cv2.waitKey(1) & 0xFF == ord('q')):
+		    break
 stream.release()
 out.release()
 cv2.destroyWindow("masked_image")
