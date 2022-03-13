@@ -60,7 +60,7 @@ def apply_mask(image, mask, color, alpha=0.5):
     return image
 
 
-def display_instances(image, boxes, masks, ids, names, scores):
+def display_instances(image, boxes, masks, ids, names, scores, img_name):
     n_instances = boxes.shape[0]
     print("no of potholes in frame :",n_instances)
     if not n_instances:
@@ -81,8 +81,11 @@ def display_instances(image, boxes, masks, ids, names, scores):
         mask = masks[:, :, i]  
         image = apply_mask(image, mask, color)
         random_name = str(uuid.uuid4())
-        image = cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
-        image = cv2.putText(image, caption, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 0.7, color, 2)
+        
+        if(score >= 0.90):
+          image = cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
+          image = cv2.putText(image, caption, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 0.7, color, 2)
+          cv2.imwrite("/content/detected/" + img_name + ".jpg", image) 
 
     return image
 
@@ -103,7 +106,7 @@ while (stream.isOpened()):
     if ret == True:
 		    results = model.detect([frame], verbose=0)
 		    r = results[0]
-		    masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
+		    masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'], i)
 		    out.write(masked_image)
         # if(cv2.waitKey(1) & 0xFF == ord('q')):
 		    #     break
