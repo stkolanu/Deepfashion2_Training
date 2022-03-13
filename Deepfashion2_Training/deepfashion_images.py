@@ -15,7 +15,12 @@ import numpy as np
 import shutil
 import random
 import argparse
-import glob
+
+ap = argparse.ArgumentParser()
+ap.add_argument("-i", "--input", required=True)
+args = vars(ap.parse_args())
+path_video = args["input"]
+
 
 class TestConfig(Config):
     NAME = "Deepfashion2"
@@ -23,16 +28,6 @@ class TestConfig(Config):
     IMAGES_PER_GPU = 1
     NUM_CLASSES = 1 + 13
 config = TestConfig()
-
-
-
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--input", required=True)
-ap.add_argument("-o", "--output", required=True)
-args = vars(ap.parse_args())
-
-path = args["input"]
-output = args["output"]
 
 
 model = modellib.MaskRCNN(mode="inference", config=config, model_dir='/content/drive/My Drive/')
@@ -47,10 +42,12 @@ def random_colors(N):
     colors = [tuple(255 * np.random.rand(3)) for _ in range(N)]
     return colors
 
+
 colors = random_colors(len(class_names))
 class_dict = {
     name: color for name, color in zip(class_names, colors)
 }
+
 
 def apply_mask(image, mask, color, alpha=0.5):
     """apply mask to image"""
@@ -74,6 +71,7 @@ def display_instances(image, boxes, masks, ids, names, scores):
     for i in range(n_instances):
         if not np.any(boxes[i]):
             continue
+
         y1, x1, y2, x2 = boxes[i]
         label = names[ids[i]]
         color = class_dict[label]
@@ -82,19 +80,37 @@ def display_instances(image, boxes, masks, ids, names, scores):
         random_name = str(uuid.uuid4())
         mask = masks[:, :, i]  
         image = apply_mask(image, mask, color)
+        random_name = str(uuid.uuid4())
         image = cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
         image = cv2.putText(image, caption, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 0.7, color, 2)
-        
+
     return image
 
-print(path)
-for imageName in glob.glob(path+'/*.jpg'):
-  print(imageName)
-  input_image = imageName
-  name = path.split("/")[-1].split(".")[0]
-  frame = cv2.imread(input_image)
-  results = model.detect([frame], verbose=0)
-  r = results[0]
-  masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
-  # random_name = str(uuid.uuid4())
-  cv2.imwrite(f'/content/detected/' + name + '.jpg', masked_image) 
+	
+stream = cv2.VideoCapture(path_video)
+frame_width = int(stream.get(3)) 
+frame_height = int(stream.get(4)) 
+
+size = (frame_width, frame_height) 
+out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc(*'MJPG'), 10, size)
+i=0
+
+while (stream.isOpened()):
+    ret , frame = stream.read()
+    print("Frame",i)
+    i+=1
+
+    if ret == True:
+		    results = model.detect([frame], verbose=0)
+		    r = results[0]
+		    masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
+		    out.write(masked_image)
+        # if(cv2.waitKey(1) & 0xFF == ord('q')):
+		    #     break
+    else:
+      break
+
+    
+stream.release()
+out.release()
+# cv2.destroyWindow("masked_image")
