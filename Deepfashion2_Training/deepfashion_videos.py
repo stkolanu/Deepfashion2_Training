@@ -99,13 +99,18 @@ while (stream.isOpened()):
     ret , frame = stream.read()
     print("Frame",i)
     i+=1
+
     if ret == True:
 		    results = model.detect([frame], verbose=0)
 		    r = results[0]
 		    masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
 		    out.write(masked_image)
-    if(cv2.waitKey(1) & 0xFF == ord('q')):
-		    break
+        # if(cv2.waitKey(1) & 0xFF == ord('q')):
+		    #     break
+    else:
+      break
+
+    
 stream.release()
 out.release()
-cv2.destroyWindow("masked_image")
+# cv2.destroyWindow("masked_image")
