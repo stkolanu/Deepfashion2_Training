@@ -85,7 +85,7 @@ def display_instances(image, boxes, masks, ids, names, scores, img_name):
         if(score >= 0.90):
           image = cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
           image = cv2.putText(image, caption, (x1, y1), cv2.FONT_HERSHEY_COMPLEX, 0.7, color, 2)
-          cv2.imwrite("/content/detected/" + img_name + ".jpg", image) 
+          cv2.imwrite("/content/detected/" + str(img_name) + ".jpg", image) 
 
     return image
 
