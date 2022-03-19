@@ -1,11 +1,11 @@
 import cv2
 import os
 import sys
-from mrcnn import utils
-from mrcnn import model as modellib
-from mrcnn.config import Config
-import mrcnn.model as modellib
-from mrcnn.model import MaskRCNN
+from lib import utils
+from lib import model as modellib
+from lib.config import Config
+import lib.model as modellib
+from lib.model import MaskRCNN
 import uuid
 import argparse
 import skimage
@@ -15,6 +15,7 @@ import numpy as np
 import shutil
 import random
 import argparse
+import glob
 
 class TestConfig(Config):
     NAME = "Deepfashion2"
@@ -30,12 +31,12 @@ ap.add_argument("-i", "--input", required=True)
 ap.add_argument("-o", "--output", required=True)
 args = vars(ap.parse_args())
 
-input_image = args["input"]
+path = args["input"]
 output = args["output"]
 
 
 model = modellib.MaskRCNN(mode="inference", config=config, model_dir='/content/drive/My Drive/')
-model.load_weights('/content/drive/My Drive/mask_rcnn_deepfashion2_0100.h5', by_name=True)
+model.load_weights('/content/gdrive/MyDrive/MaxTap/mask_rcnn_deepfashion2_0100.h5', by_name=True)
 
 class_names = ['short_sleeved_shirt', 'long_sleeved_shirt', 'short_sleeved_outwear', 'long_sleeved_outwear', 'vest', 'sling', 
                'shorts', 'trousers', 'skirt', 'short_sleeved_dress', 'long_sleeved_dress',
@@ -86,9 +87,14 @@ def display_instances(image, boxes, masks, ids, names, scores):
         
     return image
 
-frame = cv2.imread(input_image)
-results = model.detect([frame], verbose=0)
-r = results[0]
-masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
-random_name = str(uuid.uuid4())
-cv2.imwrite(output + "/" + random_name + ".jpg", masked_image) 
+print(path)
+for imageName in glob.glob(path+'/*.jpg'):
+  print(imageName)
+  input_image = imageName
+  name = path.split("/")[-1].split(".")[0]
+  frame = cv2.imread(input_image)
+  results = model.detect([frame], verbose=0)
+  r = results[0]
+  masked_image = display_instances(frame, r['rois'], r['masks'], r['class_ids'], class_names, r['scores'])
+  # random_name = str(uuid.uuid4())
+  cv2.imwrite(f'/content/detected/' + name + '.jpg', masked_image) 
