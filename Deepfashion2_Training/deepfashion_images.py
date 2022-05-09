@@ -91,7 +91,7 @@ print(path)
 for imageName in glob.glob(path+'/*.jpg'):
   print(imageName)
   input_image = imageName
-  name = path.split("/")[-1].split(".")[0]
+  name = input_image.split("/")[-1].split(".")[0]
   frame = cv2.imread(input_image)
   results = model.detect([frame], verbose=0)
   r = results[0]
